@@ -1,5 +1,5 @@
 import twitter
-import pandas
+import pandas as pd
 
 twitter_api = twitter.Api(consumer_key='1eopvYvNup45mk4ZI0GYmO3MU',
                           consumer_secret='vKBRthBxgmg4IL6tNzrMIXLrtjr897lMr1vqHbgLZx2EY0UE6L',
@@ -66,7 +66,8 @@ tweetDataFile = '/Users/huseynvaliyev/PycharmProjects/TwitterSentimentAnalysis/v
 trainingData1 = buildTrainingSet(corpusFile, tweetDataFile)
 """
 
-trainingData = pandas.read_csv('tweetDataFile.csv','text', 'label')
+trainingData = pd.read_csv('tweetDAtaFile.csv', header=None, usecols=[1,2])
+print(trainingData)
 
 import re
 from nltk.tokenize import word_tokenize

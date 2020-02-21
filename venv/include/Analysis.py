@@ -7,6 +7,7 @@ twitter_api = twitter.Api(consumer_key='1eopvYvNup45mk4ZI0GYmO3MU',
                           access_token_key='4590923133-k6exGZBMbB7rnf6kpqIjagzn9nGi54OuLNo4v92',
                           access_token_secret='iaRLeXtFhndBhjPHcBn1WnfGnV0zmLHWQlkjahU6MkKWX')
 
+
 def pressed(entry):
     def BuildTestSet(search_keyword):
         try:
@@ -26,7 +27,34 @@ def pressed(entry):
               'rt') as csvfile:
         lineReader = csv.reader(csvfile, delimiter=',', quotechar="\"")
         for row in lineReader:
-            trainingData.append({"text": row[1], "label": row[2]})
+            trainingData.append({"text": row[0], "label": row[1]})
+
+    testTrainingData = []
+    with open('/Users/huseynvaliyev/PycharmProjects/TwitterSentimentAnalysis/venv/include/testTweet.csv',
+              'rt') as csvfile:
+        lineReader = csv.reader(csvfile, delimiter=',', quotechar="\"")
+        for row in lineReader:
+            testTrainingData.append({"text": row[0], "label": row[1]})
+
+    testTrainingData1 = []
+    with open('/Users/huseynvaliyev/PycharmProjects/TwitterSentimentAnalysis/venv/include/testTweet.csv',
+              'rt') as csvfile:
+        lineReader = csv.reader(csvfile, delimiter=',', quotechar="\"")
+        for row in lineReader:
+            testTrainingData1.append({row[1]})
+
+    print(testTrainingData1)
+
+    posititveR=0
+    negativeR=0
+    for x in testTrainingData1:
+        if(x=={'positive'}):
+            posititveR=posititveR+1
+        else:
+            negativeR=negativeR+1
+
+    print(posititveR)
+    print(negativeR)
 
     import re
     from nltk.tokenize import word_tokenize
@@ -52,9 +80,11 @@ def pressed(entry):
             return [word for word in tweet if word not in self._stopwords]
 
     tweetProcessor = PreProcessTweets()
+    preprocessedTestTrainingSet = tweetProcessor.processTweets(testTrainingData)
     preprocessedTrainingSet = tweetProcessor.processTweets(trainingData)
     preprocessedTestSet = tweetProcessor.processTweets(testDataSet)
     print(preprocessedTrainingSet)
+    print(preprocessedTestTrainingSet)
     print(preprocessedTestSet)
 
     import nltk
@@ -79,40 +109,46 @@ def pressed(entry):
 
     # Now we can extract the features and train the classifier
     word_features = buildVocabulary(preprocessedTrainingSet)
-    print("----------------------------------------------------")
+    print("----------------------------------------------------1")
     print(word_features)
     trainingFeatures = nltk.classify.apply_features(extract_features, preprocessedTrainingSet)
-    print("----------------------------------------------------")
+    print("----------------------------------------------------2")
     print(trainingFeatures)
-    print("----------------------------------------------------")
+    print("----------------------------------------------------3")
 
     NBayesClassifier = nltk.NaiveBayesClassifier.train(trainingFeatures)
     print(NBayesClassifier)
-    print("----------------------------------------------------")
+    print("----------------------------------------------------4")
+
+    NBResultLabelsTest = [NBayesClassifier.classify(extract_features(tweet[0])) for tweet in preprocessedTestTrainingSet]
+    positiveTest = NBResultLabelsTest.count('positive')
+    negativeTest = NBResultLabelsTest.count('negative')
+    if(100 * (posititveR / positiveTest) < 100*(negativeR/negativeTest)):
+        correct = 100 * (posititveR / positiveTest)
+    else:
+        correct = 100*(negativeR/negativeTest)
+
+    print(100*(posititveR/positiveTest))
+    print(100*(negativeR/negativeTest))
+
+
+    print(NBResultLabelsTest)
+    print("----------------------------------------------------5")
 
     NBResultLabels = [NBayesClassifier.classify(extract_features(tweet[0])) for tweet in preprocessedTestSet]
     print(NBResultLabels)
-    print("----------------------------------------------------")
+    print("----------------------------------------------------6")
 
     # get the majority vote
 
     positive = 100 * NBResultLabels.count('positive') / len(NBResultLabels)
     negative = 100 * NBResultLabels.count('negative') / len(NBResultLabels)
 
-    label['text'] = " Positive: " +str(positive) + "%"+\
-                    " Negative: " +str(negative) + "%"
+    label['text'] = "Accuracy:" + str(round(correct)) + "%" " Positive: " + str(positive) + "%" + \
+                    " Negative: " + str(negative) + "%"
 
-    if NBResultLabels.count('positive') > NBResultLabels.count('negative'):
-        print("Overall Positive Sentiment")
-        print("Positive Sentiment Percentage = " + str(
-            100 * NBResultLabels.count('positive') / len(NBResultLabels)) + "%")
-    else:
-        print("Overall Negative Sentiment")
-        print("Negative Sentiment Percentage = " + str(
-            100 * NBResultLabels.count('negative') / len(NBResultLabels)) + "%")
-
-HEIGHT = 500
-WIDTH = 600
+HEIGHT = 400
+WIDTH = 500
 window = tk.Tk()
 
 window.title("Twitter Sentiment Analysis")
@@ -126,7 +162,7 @@ frame.place(relx=0.5, rely=0.1, relwidth=0.75, relheight=0.1, anchor="n")
 entry = tk.Entry(frame, font=40)
 entry.place(relwidth=0.65, relheight=1)
 
-button = tk.Button(frame, text="Confirm", font=40, command=lambda : pressed(entry.get()))
+button = tk.Button(frame, text="Enter", font=40, command=lambda: pressed(entry.get()))
 button.place(relx=0.7, relheight=1, relwidth=0.3)
 
 lower_frame = tk.Frame(window, bg="#80c1ff", bd=10)
